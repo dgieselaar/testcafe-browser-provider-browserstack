@@ -5,6 +5,7 @@ import BrowserstackConnector from './connector';
 import JSTestingBackend from './backends/js-testing';
 import AutomateBackend from './backends/automate';
 import BrowserProxy from './browser-proxy';
+import { debug } from 'util';
 
 
 const BUILD_ID     = process.env['BROWSERSTACK_BUILD_ID'];
@@ -14,6 +15,11 @@ const ANDROID_PROXY_RESPONSE_DELAY = 500;
 
 function isAutomateEnabled () {
     return process.env['BROWSERSTACK_USE_AUTOMATE'] && process.env['BROWSERSTACK_USE_AUTOMATE'] !== '0';
+}
+
+function debugConnector ( ...rest ) {
+    if (process.env.DEBUG_CONNECTOR) 
+        console.log('DEBUG_CONNECTOR', ...rest); //eslint-disable-line no-console
 }
 
 
@@ -31,12 +37,16 @@ export default {
     browserNames:  [],
 
     _getConnector () {
+        debugConnector('getConnector');
         this.connectorPromise = this.connectorPromise
             .then(async connector => {
+                debugConnector('getConnector.resolved', !!connector);
                 if (!connector) {
                     connector = new BrowserstackConnector(process.env['BROWSERSTACK_ACCESS_KEY']);
 
                     await connector.create();
+
+                    debugConnector('getConnector.created');
                 }
 
                 return connector;
@@ -46,10 +56,14 @@ export default {
     },
 
     _disposeConnector () {
+        debug('disposeConnector');
         this.connectorPromise = this.connectorPromise
             .then(async connector => {
-                if (connector)
+                debug('disposeConnector.resolved', !!connector);
+                if (connector) {
                     await connector.destroy();
+                    debug('disposeConnector.destroyed');
+                }
 
                 return null;
             });
@@ -73,10 +87,14 @@ export default {
     },
 
     _disposeBrowserProxy () {
+        debugConnector('disposeBrowserProxy');
         this.browserProxyPromise = this.browserProxyPromise
             .then(async browserProxy => {
-                if (browserProxy)
+                debugConnector('disposeBrowserProxy.resolved', !!browserProxy);
+                if (browserProxy) {
                     await browserProxy.dispose();
+                    debugConnector('disposeBrowserProxy.disposed');
+                }
 
                 return null;
             });
@@ -167,7 +185,11 @@ export default {
         capabilities.localIdentifier = connector.connectorInstance.localIdentifierFlag;
         capabilities.local           = true;
 
+        debugConnector('openBrowser');
+
         await this.backend.openBrowser(id, pageUrl, capabilities);
+
+        debugConnector('openBrowser.started');
 
         this.setUserAgentMetaInfo(id, this.backend.getSessionUrl(id));
     },
@@ -189,8 +211,11 @@ export default {
     },
 
     async dispose () {
+        debugConnector('dispose.start');
         await this._disposeConnector();
+        debugConnector('dispose.connectorDisposed');
         await this._disposeBrowserProxy();
+        debugConnector('dispose.browserProxyDisposed');
     },
 
 

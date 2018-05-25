@@ -16,7 +16,7 @@ describe('Browser names', function () {
             .dispose();
     });
 
-    it('Should return list of common browsers and devices', function () {
+    xit('Should return list of common browsers and devices', function () {
         return browserStackProvider
             .getBrowserList()
             .then(function (list) {
