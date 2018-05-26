@@ -97,7 +97,9 @@ export default class BrowserstackConnector {
     destroy () {
         return new Promise((resolve, reject) => {
             if (process.env.BROWSERSTACK_KILL_CONNECTOR) {
+                console.log('Force kill connector'); //eslint-disable-line
                 process.kill(this.connectorInstance.pid);
+                resolve();
                 return;
             }
 
