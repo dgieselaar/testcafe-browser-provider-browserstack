@@ -1,15 +1,15 @@
 import { parse as parseUrl } from 'url';
 import Promise from 'pinkie';
 import parseCapabilities from 'desired-capabilities';
+import fs from 'fs';
 import BrowserstackConnector from './connector';
 import JSTestingBackend from './backends/js-testing';
 import AutomateBackend from './backends/automate';
 import BrowserProxy from './browser-proxy';
-import { debug } from 'util';
-
 
 const BUILD_ID     = process.env['BROWSERSTACK_BUILD_ID'];
 const PROJECT_NAME = process.env['BROWSERSTACK_PROJECT_NAME'];
+const CAPABILITIES_FILE = process.env['BROWSERSTACK_CAPABILITIES'];
 
 const ANDROID_PROXY_RESPONSE_DELAY = 500;
 
@@ -56,13 +56,13 @@ export default {
     },
 
     _disposeConnector () {
-        debug('disposeConnector');
+        debugConnector('disposeConnector');
         this.connectorPromise = this.connectorPromise
             .then(async connector => {
-                debug('disposeConnector.resolved', !!connector);
+                debugConnector('disposeConnector.resolved', !!connector);
                 if (connector) {
                     await connector.destroy();
-                    debug('disposeConnector.destroyed');
+                    debugConnector('disposeConnector.destroyed');
                 }
 
                 return null;
@@ -180,6 +180,18 @@ export default {
 
         if (BUILD_ID)
             capabilities.build = BUILD_ID;
+
+        if (CAPABILITIES_FILE) {
+            try {
+                capabilities = {
+                    ...capabilities,
+                    ...JSON.parse(fs.readFileSync(CAPABILITIES_FILE)),
+                };
+            }
+            catch ( err ) {
+                throw new Error('Error parsing capabilities file');
+            }
+        }
 
         capabilities.name            = `TestCafe test run ${id}`;
         capabilities.localIdentifier = connector.connectorInstance.localIdentifierFlag;

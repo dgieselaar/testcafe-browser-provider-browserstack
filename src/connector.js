@@ -96,7 +96,7 @@ export default class BrowserstackConnector {
 
     destroy () {
         return new Promise((resolve, reject) => {
-            if (process.env.FORCE_KILL_BROWSERSTACK_CONNECTOR) {
+            if (process.env.BROWSERSTACK_KILL_CONNECTOR) {
                 process.kill(this.connectorInstance.pid);
                 return;
             }
